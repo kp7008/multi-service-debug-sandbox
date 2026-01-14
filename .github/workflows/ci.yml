@@ -3,24 +3,63 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install -r requirements.txt
-      - run: pytest -v
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Run security checks with Bandit
+        run: |
+          pip install bandit
+          bandit -r . -f json -o bandit.json || true
+      
+      - name: Run tests
+        run: pytest -v
 
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install flake8 black isort
-      - run: flake8 . --max-line-length=100 || true
-      - run: black --check . || true
-      - run: isort --check-only . || true
+      
+      - name: Install linting tools
+        run: pip install flake8 black isort
+      
+      - name: Run flake8
+        run: flake8 . --max-line-length=100 || true
+      
+      - name: Run black
+        run: black --check . || true
+      
+      - name: Run isort
+        run: isort --check-only . || true

@@ -5,8 +5,32 @@ __pycache__/
 .coverage
 htmlcov/
 .DS_Store
-.env
 venv/
 dist/
 build/
 *.egg-info/
+
+# Environment files - SECRETS
+.env
+.env.local
+.env.*.local
+
+# Secrets directory
+secrets/
+!secrets/.gitkeep
+!secrets/README.md
+
+# Security certificates
+*.pem
+*.key
+*.crt
+
+# Security scanning results
+bandit.json
+trivy-results.sarif
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

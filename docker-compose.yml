@@ -4,65 +4,99 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:latest
     ports:
-      - "16686:16686"
-      - "6831:6831/udp"
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:6831:6831/udp"
     networks:
       - msds
 
   msds-engine:
     build: ./msds-engine
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       - FLASK_ENV=development
+      - API_KEY=${API_KEY:-dev-key-12345}
     depends_on:
       - jaeger
     networks:
       - msds
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
 
   api-gateway:
     build: ./services/api-gateway
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     environment:
       - FLASK_ENV=development
+      - API_KEY=${API_KEY:-dev-key-12345}
     depends_on:
       - jaeger
     networks:
       - msds
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
 
   auth-service:
     build: ./services/auth-service
     ports:
-      - "5001:5001"
+      - "127.0.0.1:5001:5001"
     environment:
       - FLASK_ENV=development
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-12345}
     depends_on:
       - jaeger
     networks:
       - msds
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
 
   user-service:
     build: ./services/user-service
     ports:
-      - "5002:5002"
+      - "127.0.0.1:5002:5002"
     environment:
       - FLASK_ENV=development
+      - DB_PASSWORD=${DB_PASSWORD:-dev-password-12345}
     depends_on:
       - jaeger
     networks:
       - msds
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
 
   payment-service:
     build: ./services/payment-service
     ports:
-      - "5003:5003"
+      - "127.0.0.1:5003:5003"
     environment:
       - FLASK_ENV=development
+      - DB_PASSWORD=${DB_PASSWORD:-dev-password-12345}
     depends_on:
       - jaeger
     networks:
       - msds
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
 
 networks:
   msds:
